@@ -4,7 +4,7 @@
 
 ### Enterprise IT Operations & AIOps Platform
 
-[![CI](https://github.com/atlastech/atlastech/actions/workflows/ci.yml/badge.svg)](https://github.com/atlastech/atlastech/actions/workflows/ci.yml)
+[![CI](https://github.com/ZAKARIAXXX/atlastech/actions/workflows/ci.yml/badge.svg)](https://github.com/ZAKARIAXXX/atlastech/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![Python 3.11+](https://img.shields.io/badge/python-3.11+-blue.svg)](https://www.python.org/downloads/)
 [![Next.js 15](https://img.shields.io/badge/next.js-15-black.svg)](https://nextjs.org/)
@@ -107,7 +107,7 @@ atlastech/
 
 ```bash
 # Clone the repository
-git clone https://github.com/atlastech/atlastech.git
+git clone https://github.com/ZAKARIAXXX/atlastech.git
 cd atlastech
 
 # Start all services (PostgreSQL, Redis, API, Web)
@@ -180,12 +180,22 @@ make build      # Build production artifacts
 
 ## Roadmap
 
-- [ ] **Phase 0** — Monorepo scaffolding & CI/CD
-- [ ] **Phase 1** — Backend API with full CRUD & DB migrations
-- [ ] **Phase 2** — PowerShell telemetry agent with threshold engine
-- [ ] **Phase 3** — Next.js operations dashboard with real-time data
-- [ ] **Phase 4** — Enterprise lab (AD/DNS/DHCP) & chaos engine
+- [x] **Phase 0** — Monorepo scaffolding & CI/CD
+- [x] **Phase 1** — Backend API with full CRUD & DB migrations
+- [x] **Phase 2** — PowerShell telemetry agent with threshold engine
+- [x] **Phase 3** — Next.js operations dashboard with real-time data
+- [x] **Phase 4** — Enterprise lab (AD/DNS/DHCP) & chaos engine
 - [ ] **Phase 5** — AIOps: pgvector embeddings, RCA, anomaly detection
+
+## Contributing & Commit Convention
+
+All commits in this repository strictly follow [Conventional Commits](.github/COMMIT_CONVENTION.md) (e.g. `feat(api): ...`, `feat(lab): ...`, `fix(web): ...`).
+
+To configure the commit template locally:
+
+```bash
+git config --local commit.template .gitmessage
+```
 
 ## Architecture Decision Records
 

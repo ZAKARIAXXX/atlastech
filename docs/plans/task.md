@@ -7,3 +7,6 @@
 | T05 | Frontend Console | Next.js 15 Live Dashboard, Fleet Asset Table & Incident Desk | Complete | `tsc --noEmit` PASSED with 0 errors |
 | T06 | Chaos Suite | Enterprise Fault Injection Playbooks (`infra/chaos`) | Complete | `inject-dns-fault.ps1`, `fill-disk.ps1`, `reset-chaos.ps1` |
 | T07 | Diagnostics | Automated Remote Diagnostic Automation Suite | Complete | DNS, Network Stack, Storage Cleanup playbooks |
+| T08 | Tooling & Git | Conventional Commits `.gitmessage` template & documentation | Complete | `.gitmessage` & `.github/COMMIT_CONVENTION.md` created, `git config commit.template` applied |
+| T09 | Docs & GitHub | Fix README repo URLs, CI badge, and sync Roadmap phases | Complete | README repo URLs updated, roadmap synchronized, ready to push |
+
