@@ -1,0 +1,18 @@
+{
+  "name": "@atlastech/schemas",
+  "version": "0.1.0",
+  "description": "Shared telemetry & incident JSON schemas for AtlasTech",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts",
+    "./telemetry": "./src/telemetry.ts",
+    "./incidents": "./src/incidents.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "typescript": "^5.6.0"
+  }
+}

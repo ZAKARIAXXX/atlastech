@@ -1,0 +1,60 @@
+# === AtlasTech Monorepo ===
+
+# Dependencies
+node_modules/
+.pnp
+.pnp.js
+
+# Next.js
+.next/
+out/
+
+# Build
+dist/
+build/
+*.egg-info/
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+.venv/
+venv/
+.env
+*.egg
+
+# PowerShell
+*.log
+
+# Docker
+docker-compose.override.yml
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Testing
+coverage/
+htmlcov/
+.pytest_cache/
+.coverage
+
+# TypeScript
+*.tsbuildinfo
+
+# Misc
+*.pem
+*.key
+*.crt
