@@ -60,6 +60,12 @@ function Get-SystemTelemetry {
 
     $ipConfig = Get-NetIPAddress -AddressFamily IPv4 -ErrorAction SilentlyContinue | Where-Object { $_.InterfaceAlias -notlike "Loopback*" } | Select-Object -First 1
 
+    $macAddress = $null
+    if ($ipConfig) {
+        $adapter = Get-NetAdapter -InterfaceIndex $ipConfig.InterfaceIndex -ErrorAction SilentlyContinue
+        if ($adapter) { $macAddress = $adapter.MacAddress }
+    }
+
     $services = $CriticalServices | ForEach-Object {
         $svc = Get-Service -Name $_ -ErrorAction SilentlyContinue
         if ($svc) {
@@ -77,7 +83,7 @@ function Get-SystemTelemetry {
     return @{
         hostname         = $hostname
         ip_address       = if ($ipConfig) { $ipConfig.IPAddress } else { "0.0.0.0" }
-        mac_address      = $null
+        mac_address      = $macAddress
         os_version       = $os.Caption
         cpu_percent      = [math]::Round($cpu, 1)
         ram_percent      = $ramPercent

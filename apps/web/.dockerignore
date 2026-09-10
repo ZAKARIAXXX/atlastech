@@ -1,0 +1,10 @@
+node_modules/
+.next/
+out/
+.git/
+.github/
+.env
+.env.*
+*.md
+Dockerfile
+docker-compose*.yml

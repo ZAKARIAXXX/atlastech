@@ -1,22 +1,43 @@
 import uuid
+from datetime import datetime, timezone
+from typing import Any
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Query
 from pydantic import BaseModel
-from sqlalchemy import select
+from sqlalchemy import desc, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import selectinload
 
 from app.core.database import get_db
-from app.models.incident import Incident
+from app.models.device import Device
+from app.models.incident import Incident, IncidentEvent
 
 router = APIRouter()
+
+
+class IncidentEventResponse(BaseModel):
+    id: uuid.UUID
+    event_type: str
+    payload: dict[str, Any] | None
+    created_by: str | None
+    created_at: datetime
+
+    model_config = {"from_attributes": True}
 
 
 class IncidentCreate(BaseModel):
     title: str
     description: str
-    severity: str
+    severity: str  # critical, high, medium, low
     source: str = "manual"
     device_id: uuid.UUID | None = None
+
+
+class IncidentUpdate(BaseModel):
+    status: str | None = None  # open, in_progress, resolved, closed
+    severity: str | None = None
+    assigned_technician_id: uuid.UUID | None = None
+    resolution_notes: str | None = None
 
 
 class IncidentResponse(BaseModel):
@@ -26,39 +47,216 @@ class IncidentResponse(BaseModel):
     severity: str
     status: str
     source: str
+    device_id: uuid.UUID | None
+    device_hostname: str | None = None
+    assigned_technician_id: uuid.UUID | None
+    resolved_at: datetime | None
+    created_at: datetime
+    updated_at: datetime
+    events: list[IncidentEventResponse] = []
 
     model_config = {"from_attributes": True}
 
 
+class OpsStatsSummary(BaseModel):
+    open_incidents: int
+    critical_incidents: int
+    in_progress_incidents: int
+    resolved_today: int
+    total_devices: int
+    devices_online: int
+
+
+@router.get("/stats/summary", response_model=OpsStatsSummary)
+async def get_ops_summary(db: AsyncSession = Depends(get_db)):
+    """Summary metrics for the operations center main dashboard."""
+    # Incidents counts
+    open_cnt = await db.scalar(
+        select(func.count(Incident.id)).where(Incident.status == "open")
+    ) or 0
+    crit_cnt = await db.scalar(
+        select(func.count(Incident.id)).where(
+            Incident.severity == "critical", Incident.status.in_(["open", "in_progress"])
+        )
+    ) or 0
+    in_prog_cnt = await db.scalar(
+        select(func.count(Incident.id)).where(Incident.status == "in_progress")
+    ) or 0
+
+    today_start = datetime.now(timezone.utc).replace(hour=0, minute=0, second=0, microsecond=0)
+    resolved_cnt = await db.scalar(
+        select(func.count(Incident.id)).where(
+            Incident.status == "resolved", Incident.resolved_at >= today_start
+        )
+    ) or 0
+
+    # Device counts
+    total_dev = await db.scalar(select(func.count(Device.id))) or 0
+    online_dev = await db.scalar(
+        select(func.count(Device.id)).where(Device.status == "online")
+    ) or 0
+
+    return OpsStatsSummary(
+        open_incidents=open_cnt,
+        critical_incidents=crit_cnt,
+        in_progress_incidents=in_prog_cnt,
+        resolved_today=resolved_cnt,
+        total_devices=total_dev,
+        devices_online=online_dev,
+    )
+
+
 @router.get("/", response_model=list[IncidentResponse])
 async def list_incidents(
-    status: str | None = None,
-    severity: str | None = None,
+    status: str | None = Query(None),
+    severity: str | None = Query(None),
+    device_id: uuid.UUID | None = Query(None),
+    limit: int = Query(default=50, ge=1, le=200),
     db: AsyncSession = Depends(get_db),
 ):
-    query = select(Incident)
+    """List all incidents with optional filtering and joined device hostnames."""
+    query = (
+        select(Incident)
+        .options(selectinload(Incident.device), selectinload(Incident.events))
+        .order_by(desc(Incident.created_at))
+    )
+
     if status:
         query = query.where(Incident.status == status)
     if severity:
         query = query.where(Incident.severity == severity)
-    query = query.order_by(Incident.created_at.desc())
+    if device_id:
+        query = query.where(Incident.device_id == device_id)
+
+    query = query.limit(limit)
     result = await db.execute(query)
-    return result.scalars().all()
+    incidents = result.scalars().all()
+
+    return [
+        IncidentResponse(
+            id=inc.id,
+            title=inc.title,
+            description=inc.description,
+            severity=inc.severity,
+            status=inc.status,
+            source=inc.source,
+            device_id=inc.device_id,
+            device_hostname=inc.device.hostname if inc.device else None,
+            assigned_technician_id=inc.assigned_technician_id,
+            resolved_at=inc.resolved_at,
+            created_at=inc.created_at,
+            updated_at=inc.updated_at,
+            events=[IncidentEventResponse.model_validate(e) for e in inc.events],
+        )
+        for inc in incidents
+    ]
 
 
 @router.get("/{incident_id}", response_model=IncidentResponse)
 async def get_incident(incident_id: uuid.UUID, db: AsyncSession = Depends(get_db)):
-    result = await db.execute(select(Incident).where(Incident.id == incident_id))
+    """Get single incident details with audit events."""
+    query = (
+        select(Incident)
+        .options(selectinload(Incident.device), selectinload(Incident.events))
+        .where(Incident.id == incident_id)
+    )
+    result = await db.execute(query)
     incident = result.scalar_one_or_none()
     if not incident:
         raise HTTPException(status_code=404, detail="Incident not found")
-    return incident
+
+    return IncidentResponse(
+        id=incident.id,
+        title=incident.title,
+        description=incident.description,
+        severity=incident.severity,
+        status=incident.status,
+        source=incident.source,
+        device_id=incident.device_id,
+        device_hostname=incident.device.hostname if incident.device else None,
+        assigned_technician_id=incident.assigned_technician_id,
+        resolved_at=incident.resolved_at,
+        created_at=incident.created_at,
+        updated_at=incident.updated_at,
+        events=[IncidentEventResponse.model_validate(e) for e in incident.events],
+    )
 
 
 @router.post("/", response_model=IncidentResponse, status_code=201)
 async def create_incident(payload: IncidentCreate, db: AsyncSession = Depends(get_db)):
-    incident = Incident(**payload.model_dump(), status="open")
+    """Manually create a helpdesk incident ticket."""
+    incident = Incident(
+        title=payload.title,
+        description=payload.description,
+        severity=payload.severity,
+        source=payload.source,
+        device_id=payload.device_id,
+        status="open",
+    )
     db.add(incident)
     await db.flush()
-    await db.refresh(incident)
-    return incident
+
+    event = IncidentEvent(
+        incident_id=incident.id,
+        event_type="incident_created_manual",
+        payload={"created_via": "api"},
+        created_by="Technician",
+    )
+    db.add(event)
+    await db.commit()
+
+    return await get_incident(incident_id=incident.id, db=db)
+
+
+@router.patch("/{incident_id}", response_model=IncidentResponse)
+async def update_incident(
+    incident_id: uuid.UUID,
+    payload: IncidentUpdate,
+    db: AsyncSession = Depends(get_db),
+):
+    """Update incident status, assign technician, or mark as resolved."""
+    query = (
+        select(Incident)
+        .options(selectinload(Incident.events))
+        .where(Incident.id == incident_id)
+    )
+    result = await db.execute(query)
+    incident = result.scalar_one_or_none()
+    if not incident:
+        raise HTTPException(status_code=404, detail="Incident not found")
+
+    if payload.status:
+        prev_status = incident.status
+        incident.status = payload.status
+        if payload.status == "resolved" and not incident.resolved_at:
+            incident.resolved_at = datetime.now(timezone.utc)
+        elif payload.status != "resolved":
+            incident.resolved_at = None
+
+        event = IncidentEvent(
+            incident_id=incident.id,
+            event_type="status_changed",
+            payload={
+                "previous_status": prev_status,
+                "new_status": payload.status,
+                "notes": payload.resolution_notes,
+            },
+            created_by="Technician",
+        )
+        db.add(event)
+
+    if payload.severity:
+        incident.severity = payload.severity
+
+    if payload.assigned_technician_id is not None:
+        incident.assigned_technician_id = payload.assigned_technician_id
+        event = IncidentEvent(
+            incident_id=incident.id,
+            event_type="technician_assigned",
+            payload={"technician_id": str(payload.assigned_technician_id)},
+            created_by="Dispatcher",
+        )
+        db.add(event)
+
+    await db.commit()
+    return await get_incident(incident_id=incident.id, db=db)

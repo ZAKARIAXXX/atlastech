@@ -7,6 +7,8 @@ from sqlalchemy.ext.asyncio import async_engine_from_config
 
 from app.models.base import Base
 
+import app.models  # noqa: F401 — register all models with Base.metadata
+
 config = context.config
 if config.config_file_name is not None:
     fileConfig(config.config_file_name)
