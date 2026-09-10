@@ -1,7 +1,6 @@
-import uuid
 from typing import TYPE_CHECKING
 
-from sqlalchemy import String, Uuid
+from sqlalchemy import String
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.models.base import Base, TimestampMixin, UUIDPrimaryKeyMixin
@@ -24,6 +23,4 @@ class Device(Base, UUIDPrimaryKeyMixin, TimestampMixin):
     telemetry_records: Mapped[list["TelemetryRecord"]] = relationship(
         "TelemetryRecord", back_populates="device", cascade="all, delete-orphan"
     )
-    incidents: Mapped[list["Incident"]] = relationship(
-        "Incident", back_populates="device"
-    )
+    incidents: Mapped[list["Incident"]] = relationship("Incident", back_populates="device")

@@ -1,5 +1,5 @@
 import uuid
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from typing import Any
 
 from fastapi import APIRouter, Depends, HTTPException
@@ -132,5 +132,5 @@ async def execute_diagnostic(
         playbook_name=playbook.name,
         status="success",
         output=simulated_result,
-        executed_at=datetime.now(timezone.utc),
+        executed_at=datetime.now(UTC),
     )

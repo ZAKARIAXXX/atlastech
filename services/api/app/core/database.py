@@ -14,10 +14,13 @@ async_session = async_sessionmaker(engine, class_=AsyncSession, expire_on_commit
 
 
 async def get_db() -> AsyncGenerator[AsyncSession, None]:
+    """
+    Yields an async database session. Transaction commits and rollbacks
+    are managed explicitly by the requesting business logic.
+    """
     async with async_session() as session:
         try:
             yield session
-            await session.commit()
         except Exception:
             await session.rollback()
             raise

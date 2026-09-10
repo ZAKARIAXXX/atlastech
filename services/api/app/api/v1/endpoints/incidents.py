@@ -1,6 +1,6 @@
 import uuid
-from datetime import datetime, timezone
-from typing import Any
+from datetime import UTC, datetime
+from typing import Any, Literal
 
 from fastapi import APIRouter, Depends, HTTPException, Query
 from pydantic import BaseModel
@@ -8,11 +8,15 @@ from sqlalchemy import desc, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
+from app.core.auth import verify_api_key
 from app.core.database import get_db
 from app.models.device import Device
 from app.models.incident import Incident, IncidentEvent
 
 router = APIRouter()
+
+IncidentSeverity = Literal["critical", "high", "medium", "low"]
+IncidentStatus = Literal["open", "in_progress", "resolved", "closed"]
 
 
 class IncidentEventResponse(BaseModel):
@@ -28,14 +32,14 @@ class IncidentEventResponse(BaseModel):
 class IncidentCreate(BaseModel):
     title: str
     description: str
-    severity: str  # critical, high, medium, low
+    severity: IncidentSeverity
     source: str = "manual"
     device_id: uuid.UUID | None = None
 
 
 class IncidentUpdate(BaseModel):
-    status: str | None = None  # open, in_progress, resolved, closed
-    severity: str | None = None
+    status: IncidentStatus | None = None
+    severity: IncidentSeverity | None = None
     assigned_technician_id: uuid.UUID | None = None
     resolution_notes: str | None = None
 
@@ -70,31 +74,36 @@ class OpsStatsSummary(BaseModel):
 @router.get("/stats/summary", response_model=OpsStatsSummary)
 async def get_ops_summary(db: AsyncSession = Depends(get_db)):
     """Summary metrics for the operations center main dashboard."""
-    # Incidents counts
-    open_cnt = await db.scalar(
-        select(func.count(Incident.id)).where(Incident.status == "open")
-    ) or 0
-    crit_cnt = await db.scalar(
-        select(func.count(Incident.id)).where(
-            Incident.severity == "critical", Incident.status.in_(["open", "in_progress"])
+    open_cnt = (
+        await db.scalar(select(func.count(Incident.id)).where(Incident.status == "open")) or 0
+    )
+    crit_cnt = (
+        await db.scalar(
+            select(func.count(Incident.id)).where(
+                Incident.severity == "critical", Incident.status.in_(["open", "in_progress"])
+            )
         )
-    ) or 0
-    in_prog_cnt = await db.scalar(
-        select(func.count(Incident.id)).where(Incident.status == "in_progress")
-    ) or 0
+        or 0
+    )
+    in_prog_cnt = (
+        await db.scalar(select(func.count(Incident.id)).where(Incident.status == "in_progress"))
+        or 0
+    )
 
-    today_start = datetime.now(timezone.utc).replace(hour=0, minute=0, second=0, microsecond=0)
-    resolved_cnt = await db.scalar(
-        select(func.count(Incident.id)).where(
-            Incident.status == "resolved", Incident.resolved_at >= today_start
+    today_start = datetime.now(UTC).replace(hour=0, minute=0, second=0, microsecond=0)
+    resolved_cnt = (
+        await db.scalar(
+            select(func.count(Incident.id)).where(
+                Incident.status == "resolved", Incident.resolved_at >= today_start
+            )
         )
-    ) or 0
+        or 0
+    )
 
-    # Device counts
     total_dev = await db.scalar(select(func.count(Device.id))) or 0
-    online_dev = await db.scalar(
-        select(func.count(Device.id)).where(Device.status == "online")
-    ) or 0
+    online_dev = (
+        await db.scalar(select(func.count(Device.id)).where(Device.status == "online")) or 0
+    )
 
     return OpsStatsSummary(
         open_incidents=open_cnt,
@@ -108,8 +117,8 @@ async def get_ops_summary(db: AsyncSession = Depends(get_db)):
 
 @router.get("/", response_model=list[IncidentResponse])
 async def list_incidents(
-    status: str | None = Query(None),
-    severity: str | None = Query(None),
+    status: IncidentStatus | None = Query(None),
+    severity: IncidentSeverity | None = Query(None),
     device_id: uuid.UUID | None = Query(None),
     limit: int = Query(default=50, ge=1, le=200),
     db: AsyncSession = Depends(get_db),
@@ -183,8 +192,12 @@ async def get_incident(incident_id: uuid.UUID, db: AsyncSession = Depends(get_db
 
 
 @router.post("/", response_model=IncidentResponse, status_code=201)
-async def create_incident(payload: IncidentCreate, db: AsyncSession = Depends(get_db)):
-    """Manually create a helpdesk incident ticket."""
+async def create_incident(
+    payload: IncidentCreate,
+    db: AsyncSession = Depends(get_db),
+    _auth: str = Depends(verify_api_key),
+):
+    """Manually create a helpdesk incident ticket (Protected)."""
     incident = Incident(
         title=payload.title,
         description=payload.description,
@@ -213,12 +226,11 @@ async def update_incident(
     incident_id: uuid.UUID,
     payload: IncidentUpdate,
     db: AsyncSession = Depends(get_db),
+    _auth: str = Depends(verify_api_key),
 ):
-    """Update incident status, assign technician, or mark as resolved."""
+    """Update incident status, assign technician, or mark as resolved (Protected)."""
     query = (
-        select(Incident)
-        .options(selectinload(Incident.events))
-        .where(Incident.id == incident_id)
+        select(Incident).options(selectinload(Incident.events)).where(Incident.id == incident_id)
     )
     result = await db.execute(query)
     incident = result.scalar_one_or_none()
@@ -229,7 +241,7 @@ async def update_incident(
         prev_status = incident.status
         incident.status = payload.status
         if payload.status == "resolved" and not incident.resolved_at:
-            incident.resolved_at = datetime.now(timezone.utc)
+            incident.resolved_at = datetime.now(UTC)
         elif payload.status != "resolved":
             incident.resolved_at = None
 

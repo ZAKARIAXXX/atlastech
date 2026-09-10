@@ -2,20 +2,13 @@
 
 import React, { useEffect, useState } from "react";
 import {
-  Activity,
   AlertOctagon,
   AlertTriangle,
   CheckCircle,
-  Clock,
-  Cpu,
-  Database,
   Globe,
-  HardDrive,
-  Layers,
   Laptop,
   Play,
   RefreshCw,
-  Server,
   Shield,
   Terminal,
   Wifi,

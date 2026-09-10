@@ -1,5 +1,4 @@
-import uuid
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from typing import Any
 
 from fastapi import APIRouter, Depends, HTTPException, Query
@@ -7,6 +6,7 @@ from pydantic import BaseModel, Field
 from sqlalchemy import desc, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.core.auth import verify_api_key
 from app.core.database import get_db
 from app.models.device import Device
 from app.models.telemetry import TelemetryRecord
@@ -47,12 +47,16 @@ class TelemetryResponse(BaseModel):
 
 
 @router.post("/", response_model=TelemetryResponse, status_code=200)
-async def ingest_telemetry(payload: TelemetryIngest, db: AsyncSession = Depends(get_db)):
+async def ingest_telemetry(
+    payload: TelemetryIngest,
+    db: AsyncSession = Depends(get_db),
+    _auth: str = Depends(verify_api_key),
+):
     """
     Ingest endpoint telemetry, upsert device registry, persist metrics,
     and evaluate real-time threshold alert rules.
+    Protected via X-API-Key in production.
     """
-    # 1. Upsert Device
     stmt = select(Device).where(Device.hostname == payload.hostname)
     result = await db.execute(stmt)
     device = result.scalar_one_or_none()
@@ -77,7 +81,6 @@ async def ingest_telemetry(payload: TelemetryIngest, db: AsyncSession = Depends(
         if payload.mac_address:
             device.mac_address = payload.mac_address
 
-    # 2. Record Telemetry
     record = TelemetryRecord(
         device_id=device.id,
         cpu_percent=payload.cpu_percent,
@@ -91,7 +94,6 @@ async def ingest_telemetry(payload: TelemetryIngest, db: AsyncSession = Depends(
     )
     db.add(record)
 
-    # 3. Threshold Evaluation
     incidents = await ThresholdEngine.evaluate(
         device=device,
         telemetry=payload.model_dump(),
@@ -105,7 +107,7 @@ async def ingest_telemetry(payload: TelemetryIngest, db: AsyncSession = Depends(
         hostname=device.hostname,
         status="accepted",
         incidents_generated=len(incidents),
-        timestamp=datetime.now(timezone.utc),
+        timestamp=datetime.now(UTC),
     )
 
 

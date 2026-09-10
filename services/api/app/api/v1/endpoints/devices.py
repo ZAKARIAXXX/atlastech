@@ -1,17 +1,21 @@
 import uuid
 from datetime import datetime
-from typing import Any
+from typing import Literal
 
 from fastapi import APIRouter, Depends, HTTPException, Query
 from pydantic import BaseModel
 from sqlalchemy import desc, select
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import selectinload
 
+from app.core.auth import verify_api_key
 from app.core.database import get_db
 from app.models.device import Device
 from app.models.telemetry import TelemetryRecord
 
 router = APIRouter()
+
+DeviceStatus = Literal["online", "offline", "maintenance", "decommissioned"]
 
 
 class DeviceCreate(BaseModel):
@@ -24,7 +28,7 @@ class DeviceCreate(BaseModel):
 
 class DeviceUpdate(BaseModel):
     department: str | None = None
-    status: str | None = None
+    status: DeviceStatus | None = None
     ip_address: str | None = None
 
 
@@ -55,31 +59,41 @@ class DeviceDetailResponse(BaseModel):
 @router.get("/", response_model=list[DeviceDetailResponse])
 async def list_devices(
     department: str | None = Query(None),
-    status: str | None = Query(None),
+    status: DeviceStatus | None = Query(None),
     db: AsyncSession = Depends(get_db),
 ):
-    """List all registered devices with their latest telemetry snapshot."""
-    query = select(Device)
+    """
+    List all registered devices with their latest telemetry snapshot.
+    Optimized with eager loading to prevent N+1 query degradation.
+    """
+    query = (
+        select(Device)
+        .options(
+            selectinload(
+                Device.telemetry_records.and_(
+                    TelemetryRecord.id.in_(
+                        select(TelemetryRecord.id)
+                        .where(TelemetryRecord.device_id == Device.id)
+                        .order_by(desc(TelemetryRecord.created_at))
+                        .limit(1)
+                    )
+                )
+            )
+        )
+        .order_by(Device.hostname)
+    )
+
     if department:
         query = query.where(Device.department == department)
     if status:
         query = query.where(Device.status == status)
 
-    result = await db.execute(query.order_by(Device.hostname))
+    result = await db.execute(query)
     devices = result.scalars().all()
 
     device_list = []
     for dev in devices:
-        # Fetch latest telemetry
-        t_stmt = (
-            select(TelemetryRecord)
-            .where(TelemetryRecord.device_id == dev.id)
-            .order_by(desc(TelemetryRecord.created_at))
-            .limit(1)
-        )
-        t_res = await db.execute(t_stmt)
-        latest_t = t_res.scalar_one_or_none()
-
+        latest_t = dev.telemetry_records[0] if dev.telemetry_records else None
         snapshot = None
         if latest_t:
             snapshot = TelemetrySnapshot(
@@ -112,20 +126,28 @@ async def list_devices(
 @router.get("/{device_id}", response_model=DeviceDetailResponse)
 async def get_device(device_id: uuid.UUID, db: AsyncSession = Depends(get_db)):
     """Retrieve detailed information for a single device."""
-    result = await db.execute(select(Device).where(Device.id == device_id))
+    query = (
+        select(Device)
+        .options(
+            selectinload(
+                Device.telemetry_records.and_(
+                    TelemetryRecord.id.in_(
+                        select(TelemetryRecord.id)
+                        .where(TelemetryRecord.device_id == device_id)
+                        .order_by(desc(TelemetryRecord.created_at))
+                        .limit(1)
+                    )
+                )
+            )
+        )
+        .where(Device.id == device_id)
+    )
+    result = await db.execute(query)
     dev = result.scalar_one_or_none()
     if not dev:
         raise HTTPException(status_code=404, detail="Device not found")
 
-    t_stmt = (
-        select(TelemetryRecord)
-        .where(TelemetryRecord.device_id == dev.id)
-        .order_by(desc(TelemetryRecord.created_at))
-        .limit(1)
-    )
-    t_res = await db.execute(t_stmt)
-    latest_t = t_res.scalar_one_or_none()
-
+    latest_t = dev.telemetry_records[0] if dev.telemetry_records else None
     snapshot = None
     if latest_t:
         snapshot = TelemetrySnapshot(
@@ -152,11 +174,17 @@ async def get_device(device_id: uuid.UUID, db: AsyncSession = Depends(get_db)):
 
 
 @router.post("/", response_model=DeviceDetailResponse, status_code=201)
-async def create_device(payload: DeviceCreate, db: AsyncSession = Depends(get_db)):
-    """Manually register an asset/device."""
+async def create_device(
+    payload: DeviceCreate,
+    db: AsyncSession = Depends(get_db),
+    _auth: str = Depends(verify_api_key),
+):
+    """Manually register an asset/device (Protected)."""
     existing = await db.execute(select(Device).where(Device.hostname == payload.hostname))
     if existing.scalar_one_or_none():
-        raise HTTPException(status_code=409, detail=f"Device '{payload.hostname}' already registered")
+        raise HTTPException(
+            status_code=409, detail=f"Device '{payload.hostname}' already registered"
+        )
 
     device = Device(**payload.model_dump())
     db.add(device)
@@ -182,8 +210,9 @@ async def update_device(
     device_id: uuid.UUID,
     payload: DeviceUpdate,
     db: AsyncSession = Depends(get_db),
+    _auth: str = Depends(verify_api_key),
 ):
-    """Update device metadata."""
+    """Update device metadata (Protected)."""
     result = await db.execute(select(Device).where(Device.id == device_id))
     dev = result.scalar_one_or_none()
     if not dev:
@@ -194,13 +223,16 @@ async def update_device(
         setattr(dev, key, value)
 
     await db.commit()
-    await db.refresh(dev)
     return await get_device(device_id=device_id, db=db)
 
 
 @router.delete("/{device_id}", status_code=204)
-async def delete_device(device_id: uuid.UUID, db: AsyncSession = Depends(get_db)):
-    """Deregister / delete a device and associated records."""
+async def delete_device(
+    device_id: uuid.UUID,
+    db: AsyncSession = Depends(get_db),
+    _auth: str = Depends(verify_api_key),
+):
+    """Deregister / delete a device and associated records (Protected)."""
     result = await db.execute(select(Device).where(Device.id == device_id))
     dev = result.scalar_one_or_none()
     if not dev:
