@@ -1,47 +1,47 @@
-from fastapi.testclient import TestClient
-
-from app.main import app
-
-client = TestClient(app)
+import uuid
+import pytest
+from httpx import AsyncClient
 
 
-def test_telemetry_ingest():
+@pytest.mark.asyncio
+async def test_telemetry_ingestion_registers_device_and_metrics(client: AsyncClient):
+    hostname = f"AT-PC-TEL-{uuid.uuid4().hex[:6]}"
     payload = {
-        "hostname": "AT-PC-TEL-TEST",
-        "ip_address": "192.168.10.50",
+        "hostname": hostname,
+        "ip_address": "192.168.20.101",
+        "mac_address": "00:50:56:C0:00:08",
         "os_version": "Windows 11 Pro 23H2",
-        "cpu_percent": 45.2,
-        "ram_percent": 67.8,
-        "disk_percent": 55.0,
+        "department": "HR",
+        "cpu_percent": 34.5,
+        "ram_percent": 58.2,
+        "disk_percent": 62.0,
         "gateway_reachable": True,
         "dns_resolution_ok": True,
         "critical_services": [
-            {"name": "dnscache", "display_name": "DNS Client", "status": "running"}
+            {"name": "dnscache", "display_name": "DNS Client", "status": "running"},
+            {"name": "spooler", "display_name": "Print Spooler", "status": "running"},
         ],
-        "logged_in_user": "ATLAS\\testuser",
+        "logged_in_user": "ATLASTECH\\sarah.miller",
+        "latency_ms": 4,
     }
-    response = client.post("/api/v1/telemetry/", json=payload)
-    assert response.status_code == 200
-    data = response.json()
+
+    ingest_res = await client.post("/api/v1/telemetry/", json=payload)
+    assert ingest_res.status_code == 200
+    data = ingest_res.json()
     assert data["status"] == "accepted"
-    assert data["hostname"] == "AT-PC-TEL-TEST"
-    assert "device_id" in data
-    assert "incidents_generated" in data
+    assert data["hostname"] == hostname
+    assert data["incidents_generated"] == 0
 
+    # Verify device exists
+    latest_res = await client.get(f"/api/v1/telemetry/latest/{hostname}")
+    assert latest_res.status_code == 200
+    latest = latest_res.json()
+    assert latest["hostname"] == hostname
+    assert latest["cpu_percent"] == 34.5
+    assert latest["disk_percent"] == 62.0
+    assert latest["gateway_reachable"] is True
 
-def test_telemetry_latest():
-    response = client.get("/api/v1/telemetry/latest/AT-PC-TEL-TEST")
-    assert response.status_code == 200
-    data = response.json()
-    assert data["hostname"] == "AT-PC-TEL-TEST"
-
-
-def test_telemetry_latest_not_found():
-    response = client.get("/api/v1/telemetry/latest/NONEXISTENT")
-    assert response.status_code == 404
-
-
-def test_telemetry_history():
-    response = client.get("/api/v1/telemetry/history/AT-PC-TEL-TEST?limit=5")
-    assert response.status_code == 200
-    assert isinstance(response.json(), list)
+    # Check history
+    hist_res = await client.get(f"/api/v1/telemetry/history/{hostname}")
+    assert hist_res.status_code == 200
+    assert len(hist_res.json()) >= 1

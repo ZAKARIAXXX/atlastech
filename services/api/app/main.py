@@ -5,10 +5,15 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from app.api.v1.router import api_router
 from app.core.config import settings
+from app.core.database import engine
+from app.models.base import Base
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
+    # Ensure tables exist on startup (especially for sqlite / local dev)
+    async with engine.begin() as conn:
+        await conn.run_sync(Base.metadata.create_all)
     yield
 
 

@@ -1,19 +1,19 @@
-from fastapi.testclient import TestClient
-
-from app.main import app
-
-client = TestClient(app)
+import pytest
+from httpx import AsyncClient
 
 
-def test_health_check():
-    response = client.get("/health")
+@pytest.mark.asyncio
+async def test_root_health(client: AsyncClient):
+    response = await client.get("/health")
     assert response.status_code == 200
     data = response.json()
     assert data["status"] == "healthy"
+    assert data["service"] == "atlastech-api"
 
 
-def test_api_health():
-    response = client.get("/api/v1/health/")
+@pytest.mark.asyncio
+async def test_api_v1_health(client: AsyncClient):
+    response = await client.get("/api/v1/health/")
     assert response.status_code == 200
     data = response.json()
     assert data["status"] == "healthy"
