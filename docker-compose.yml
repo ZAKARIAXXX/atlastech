@@ -4,9 +4,9 @@ services:
     container_name: atlastech-postgres
     env_file: .env
     environment:
-      POSTGRES_USER: ${POSTGRES_USER}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
-      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER:?POSTGRES_USER is required}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD is required}
+      POSTGRES_DB: ${POSTGRES_DB:?POSTGRES_DB is required}
     ports:
       - "127.0.0.1:5432:5432"
     volumes:
@@ -23,14 +23,14 @@ services:
   redis:
     image: redis:7-alpine
     container_name: atlastech-redis
-    command: redis-server --requirepass ${ATLASTECH_REDIS_PASSWORD:-atlastech_redis_s3cure}
+    command: redis-server --requirepass ${ATLASTECH_REDIS_PASSWORD:?ATLASTECH_REDIS_PASSWORD is required}
     ports:
       - "127.0.0.1:6379:6379"
     volumes:
       - redis_data:/data
     restart: unless-stopped
     healthcheck:
-      test: ["CMD", "redis-cli", "-a", "${ATLASTECH_REDIS_PASSWORD:-atlastech_redis_s3cure}", "ping"]
+      test: ["CMD", "redis-cli", "-a", "${ATLASTECH_REDIS_PASSWORD:?ATLASTECH_REDIS_PASSWORD is required}", "ping"]
       interval: 5s
       timeout: 5s
       retries: 5
@@ -44,11 +44,11 @@ services:
     container_name: atlastech-api
     env_file: .env
     environment:
-      ATLASTECH_DATABASE_URL: ${ATLASTECH_DATABASE_URL}
-      ATLASTECH_REDIS_URL: ${ATLASTECH_REDIS_URL}
-      ATLASTECH_ENVIRONMENT: ${ATLASTECH_ENVIRONMENT}
-      ATLASTECH_JWT_SECRET_KEY: ${ATLASTECH_JWT_SECRET_KEY}
-      ATLASTECH_API_KEY: ${ATLASTECH_API_KEY}
+      ATLASTECH_DATABASE_URL: ${ATLASTECH_DATABASE_URL:?ATLASTECH_DATABASE_URL is required}
+      ATLASTECH_REDIS_URL: ${ATLASTECH_REDIS_URL:?ATLASTECH_REDIS_URL is required}
+      ATLASTECH_ENVIRONMENT: ${ATLASTECH_ENVIRONMENT:-development}
+      ATLASTECH_JWT_SECRET_KEY: ${ATLASTECH_JWT_SECRET_KEY:?ATLASTECH_JWT_SECRET_KEY is required}
+      ATLASTECH_API_KEY: ${ATLASTECH_API_KEY:?ATLASTECH_API_KEY is required}
     ports:
       - "8000:8000"
     depends_on:

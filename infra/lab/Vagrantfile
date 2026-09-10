@@ -1,0 +1,92 @@
+# -*- mode: ruby -*-
+# vi: set ft=ruby :
+
+# ==============================================================================
+# AtlasTech Enterprise Lab — Multi-VM Vagrantfile
+# ==============================================================================
+# Architecture:
+#   - dc01:      192.168.10.10  (Active Directory, DNS, DHCP, SMB Shares)
+#   - client01:  192.168.10.101 (Domain Joined: atlastech.local, Telemetry Agent)
+#   - client02:  192.168.10.102 (Domain Joined: atlastech.local, Telemetry Agent)
+# ==============================================================================
+
+Vagrant.configure("2") do |config|
+  config.vm.box_check_update = false
+
+  # ----------------------------------------------------------------------------
+  # 1. Primary Domain Controller (dc01.atlastech.local)
+  # ----------------------------------------------------------------------------
+  config.vm.define "dc01" do |dc|
+    dc.vm.box = "gusztavvargadr/windows-server-2022-standard"
+    dc.vm.hostname = "AT-DC-01"
+    dc.vm.network "private_network", ip: "192.168.10.10"
+    dc.vm.communicator = "winrm"
+
+    dc.vm.provider "virtualbox" do |vb|
+      vb.name = "AtlasTech_DC01"
+      vb.memory = 4096
+      vb.cpus = 2
+      vb.customize ["modifyvm", :id, "--nicpromisc2", "allow-all"]
+    end
+
+    dc.vm.provider "hyperv" do |hv|
+      hv.vmname = "AtlasTech_DC01"
+      hv.memory = 4096
+      hv.cpus = 2
+    end
+
+    # Provisioning: Install AD DS, Promote Forest & Seed Users
+    dc.vm.provision "shell", path: "scripts/Install-DomainController.ps1"
+    dc.vm.provision "shell", path: "scripts/Seed-EnterpriseEnvironment.ps1"
+  end
+
+  # ----------------------------------------------------------------------------
+  # 2. Finance Department Client (client01.atlastech.local)
+  # ----------------------------------------------------------------------------
+  config.vm.define "client01" do |c1|
+    c1.vm.box = "gusztavvargadr/windows-11-enterprise"
+    c1.vm.hostname = "AT-PC-024"
+    c1.vm.network "private_network", ip: "192.168.10.101"
+    c1.vm.communicator = "winrm"
+
+    c1.vm.provider "virtualbox" do |vb|
+      vb.name = "AtlasTech_Client01"
+      vb.memory = 3072
+      vb.cpus = 2
+    end
+
+    c1.vm.provider "hyperv" do |hv|
+      hv.vmname = "AtlasTech_Client01"
+      hv.memory = 3072
+      hv.cpus = 2
+    end
+
+    # Provisioning: Point DNS to DC and Join atlastech.local
+    c1.vm.provision "shell", path: "scripts/Join-Domain.ps1", args: "-DomainControllerIP 192.168.10.10"
+  end
+
+  # ----------------------------------------------------------------------------
+  # 3. IT Department Client (client02.atlastech.local)
+  # ----------------------------------------------------------------------------
+  config.vm.define "client02" do |c2|
+    c2.vm.box = "gusztavvargadr/windows-11-enterprise"
+    c2.vm.hostname = "AT-PC-012"
+    c2.vm.network "private_network", ip: "192.168.10.102"
+    c2.vm.communicator = "winrm"
+
+    c2.vm.provider "virtualbox" do |vb|
+      vb.name = "AtlasTech_Client02"
+      vb.memory = 3072
+      vb.cpus = 2
+    end
+
+    c2.vm.provider "hyperv" do |hv|
+      hv.vmname = "AtlasTech_Client02"
+      hv.memory = 3072
+      hv.cpus = 2
+    end
+
+    # Provisioning: Point DNS to DC and Join atlastech.local
+    c2.vm.provision "shell", path: "scripts/Join-Domain.ps1", args: "-DomainControllerIP 192.168.10.10"
+  end
+end
