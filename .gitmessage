@@ -1,0 +1,40 @@
+# <type>(<scope>): <subject line (imperative, present tense, max 72 chars)>
+# ─── Example: feat(lab): add automated AD Domain Controller install ───
+
+# Why is this change necessary?
+# - What problem does this commit solve?
+# - What was the motivation for this change?
+
+# Summary of changes:
+# - Bullet points of key technical changes
+# - Side effects, migrations, or architectural impacts
+
+# Breaking changes & References:
+# BREAKING CHANGE: <description>
+# Closes #<issue> / Fixes #<issue>
+
+# ─── Allowed Types ────────────────────────────────────────────────────
+# feat:     A new feature or functionality
+# fix:      A bug fix
+# security: Security hardening, CVE patch, or permission fix
+# docs:     Documentation changes only
+# refactor: Code change that neither fixes a bug nor adds a feature
+# perf:     A code change that improves performance
+# test:     Adding missing tests or correcting existing tests
+# build:    Changes affecting the build system or external dependencies
+# ci:       Changes to CI/CD workflows and automation scripts
+# chore:    Tooling, maintenance, repo configuration, templates
+# revert:   Revert a previous commit
+#
+# ─── Allowed Scopes (AtlasTech) ───────────────────────────────────────
+# api:       services/api (FastAPI, SQLAlchemy models, routes, engine)
+# web:       apps/web (Next.js 15, dashboard, fleet table, triage desk)
+# collector: agents/collector (PowerShell telemetry collector)
+# infra:     infra/ (Docker, Vagrant, AD, DNS, domain scripts)
+# lab:       infra/lab (Lab environment VMs, provisioning)
+# chaos:     infra/chaos (Fault injection playbooks)
+# schemas:   packages/schemas (Shared TypeScript schemas & contracts)
+# docs:      Documentation, ADRs, runbooks, architecture
+# git:       Git configuration, hooks, commit templates
+# deps:      Dependency updates and management
+# ──────────────────────────────────────────────────────────────────────
