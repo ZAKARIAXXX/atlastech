@@ -26,6 +26,16 @@ flowchart LR
 
 ## Network Topology
 
+### Current Lab Topology (as built)
+
+The `infra/lab` Vagrant environment provisions a single flat subnet — this diagram matches the actual IPs in `Vagrantfile` (`dc01` at `.10`, `client01` at `.101`, `client02` at `.102`):
+
+![AtlasTech Lab Network Topology](./lab-network-topology.png)
+
+### Target Multi-VLAN Design (not yet implemented)
+
+The segmented design below is the intended production topology once the lab moves past a single flat subnet. It is not yet reflected in `infra/lab`:
+
 ```mermaid
 flowchart TD
     FW[Firewall / Router] --> SW[Core Switch]
