@@ -5,9 +5,11 @@ Revises:
 Create Date: 2026-09-10 11:15:00.000000
 
 """
+
 from collections.abc import Sequence
 
 import sqlalchemy as sa
+
 from alembic import op
 
 # revision identifiers, used by Alembic.
@@ -72,7 +74,9 @@ def upgrade() -> None:
         sa.ForeignKeyConstraint(["device_id"], ["devices.id"], ondelete="CASCADE"),
         sa.PrimaryKeyConstraint("id"),
     )
-    op.create_index(op.f("ix_telemetry_records_device_id"), "telemetry_records", ["device_id"], unique=False)
+    op.create_index(
+        op.f("ix_telemetry_records_device_id"), "telemetry_records", ["device_id"], unique=False
+    )
 
     # 3. Incidents Table
     op.create_table(
@@ -128,7 +132,9 @@ def upgrade() -> None:
         sa.ForeignKeyConstraint(["incident_id"], ["incidents.id"], ondelete="CASCADE"),
         sa.PrimaryKeyConstraint("id"),
     )
-    op.create_index(op.f("ix_incident_events_incident_id"), "incident_events", ["incident_id"], unique=False)
+    op.create_index(
+        op.f("ix_incident_events_incident_id"), "incident_events", ["incident_id"], unique=False
+    )
 
 
 def downgrade() -> None:
