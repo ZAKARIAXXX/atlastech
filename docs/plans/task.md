@@ -9,4 +9,6 @@
 | T07 | Diagnostics | Automated Remote Diagnostic Automation Suite | Complete | DNS, Network Stack, Storage Cleanup playbooks |
 | T08 | Tooling & Git | Conventional Commits `.gitmessage` template & documentation | Complete | `.gitmessage` & `.github/COMMIT_CONVENTION.md` created, `git config commit.template` applied |
 | T09 | Docs & GitHub | Fix README repo URLs, CI badge, and sync Roadmap phases | Complete | README repo URLs updated, roadmap synchronized, ready to push |
+| T10 | Architecture & Roadmap | Create comprehensive project status & core-first roadmap | Complete | `docs/PROJECT_STATUS_AND_ROADMAP.md` created with status matrix and core roadmap |
+
 
