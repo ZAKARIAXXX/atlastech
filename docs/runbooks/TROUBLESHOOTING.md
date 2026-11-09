@@ -58,5 +58,17 @@ Common setup and runtime issues for AtlasTech.
 
 ### Collector script is blocked
 
-- PowerShell execution policy may block the script. Run PowerShell as Administrator and set the policy for the session, or use the installer: `.\agents\collector\install.ps1 -ApiUrl "http://YOUR_API:8000/api/v1/telemetry"`.
+- PowerShell execution policy may block the script. Run PowerShell as Administrator and set the policy for the session, or use the installer: `.\\agents\\collector\\install.ps1 -ApiUrl "http://YOUR_API:8000/api/v1/telemetry"`.
 - Confirm the API URL is reachable from the endpoint before running the collector.
+
+## CI
+
+### Security Scan fails: `Unable to resolve action aquasecurity/trivy-action@0.28.0`
+
+- The `0.28.0` tag no longer exists. After the March 2026 Trivy supply-chain compromise (CVE-2026-33634), tags `0.0.1`–`0.34.2` were deleted and republished with a `v` prefix; current is `v0.36.0`.
+- Fix: in `.github/workflows/ci.yml`, change `aquasecurity/trivy-action@0.28.0` to `aquasecurity/trivy-action@v0.36.0` (note the `v` prefix), then re-run CI.
+- Nothing malicious ran — the job fails at action resolution, before anything executes.
+
+### API Lint & Type Check fails (exit 1)
+
+- Cause unknown as of 2026-11-09 — the job log was not retrieved. Run the API lint/typecheck locally from `services/api` (`ruff check .`, `ruff format --check .`, `mypy .`) and report the actual error.
