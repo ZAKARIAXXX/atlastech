@@ -187,6 +187,10 @@ make build      # Build production artifacts
 - [x] **Phase 4** — Enterprise lab (AD/DNS/DHCP) & chaos engine
 - [ ] **Phase 5** — AIOps: pgvector embeddings, RCA, anomaly detection
 
+## Project Status
+
+See [`docs/STATUS.md`](docs/STATUS.md) for the current CI state and known issues.
+
 ## Contributing & Commit Convention
 
 All commits in this repository strictly follow [Conventional Commits](.github/COMMIT_CONVENTION.md) (e.g. `feat(api): ...`, `feat(lab): ...`, `fix(web): ...`).
