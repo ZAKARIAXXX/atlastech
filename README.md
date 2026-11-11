@@ -203,6 +203,7 @@ All major technical decisions are documented in [`docs/adr/`](docs/adr/):
 
 - [ADR-001](docs/adr/ADR-001-fastapi-backend.md) — FastAPI as Backend Framework
 - [ADR-002](docs/adr/ADR-002-nextjs-frontend.md) — Next.js 15 as Frontend Framework
+- [ADR-004](docs/adr/ADR-004-trivy-security-scanning.md) — Trivy for CI Security Scanning
 
 ## License
 
