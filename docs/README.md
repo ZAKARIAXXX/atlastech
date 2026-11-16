@@ -8,6 +8,9 @@ made; runbooks record how to operate and recover the system.
 - [Status](STATUS.md) — current state, CI health, next actions.
 - [Project status & roadmap](PROJECT_STATUS_AND_ROADMAP.md) — phases and direction.
 - [Changelog](../CHANGELOG.md) — notable changes, newest first.
+- [Security policy](../SECURITY.md) — how to report a vulnerability, and the
+  repository's security posture.
+- [License](../LICENSE) — MIT.
 
 ## Architecture
 
@@ -20,9 +23,12 @@ made; runbooks record how to operate and recover the system.
 - [ADR-002 — Next.js frontend](adr/ADR-002-nextjs-frontend.md)
 - [ADR-003 — Postgres & Redis data layer](adr/ADR-003-postgres-redis-data-layer.md)
 - [ADR-004 — Trivy security scanning](adr/ADR-004-trivy-security-scanning.md)
+- [ADR-005 — Docker Compose local environment](adr/ADR-005-docker-compose-local-environment.md)
 
 ## Runbooks
 
+- [Local development](runbooks/local-development.md)
+- [Database backup & restore](runbooks/database-backup-restore.md)
 - [CI](runbooks/CI.md)
 - [Troubleshooting](runbooks/TROUBLESHOOTING.md)
 - [API lint & type check triage](runbooks/api-lint-typecheck.md)

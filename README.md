@@ -209,6 +209,7 @@ All major technical decisions are documented in [`docs/adr/`](docs/adr/):
 - [ADR-002](docs/adr/ADR-002-nextjs-frontend.md) — Next.js 15 as Frontend Framework
 - [ADR-003](docs/adr/ADR-003-postgres-redis-data-layer.md) — PostgreSQL + Redis as the Data Layer
 - [ADR-004](docs/adr/ADR-004-trivy-security-scanning.md) — Trivy for CI Security Scanning
+- [ADR-005](docs/adr/ADR-005-docker-compose-local-environment.md) — Docker Compose as the Local Environment
 
 ## License
 
