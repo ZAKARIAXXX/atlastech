@@ -7,6 +7,16 @@ Format follows [Keep a Changelog](https://keepachangelog.com/).
 
 ### Added
 
+- MIT license file (`LICENSE`) — the README badge link now resolves
+  (2026-11-16).
+- Security policy (`SECURITY.md`): vulnerability reporting route and the
+  repository's documented security posture (2026-11-16).
+- Runbook: local development (`docs/runbooks/local-development.md`) —
+  environment setup, `make up` vs `make dev`, verification (2026-11-16).
+- Runbook: database backup & restore
+  (`docs/runbooks/database-backup-restore.md`) (2026-11-16).
+- ADR-005: Docker Compose as the local environment
+  (`docs/adr/ADR-005-docker-compose-local-environment.md`) (2026-11-16).
 - Runbook: API lint & type check triage procedure
   (`docs/runbooks/api-lint-typecheck.md`).
 - Documentation index (`docs/README.md`) mapping status, ADRs, runbooks,
@@ -17,6 +27,12 @@ Format follows [Keep a Changelog](https://keepachangelog.com/).
 
 ### Changed
 
+- Documentation index (`docs/README.md`) now also links the local
+  development and backup/restore runbooks, ADR-005, the security policy,
+  and the license; the main README's ADR list now includes ADR-005
+  (2026-11-16).
+- `docs/STATUS.md` refreshed for 2026-11-16: documentation state; CI state
+  unchanged since its last verification on 2026-11-13.
 - `docs/STATUS.md` refreshed for 2026-11-13: current CI state and a
   next-actions list.
 
