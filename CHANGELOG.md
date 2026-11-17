@@ -7,6 +7,17 @@ Format follows [Keep a Changelog](https://keepachangelog.com/).
 
 ### Added
 
+- Contribution guide (`CONTRIBUTING.md`): workflow, branch/commit
+  conventions, local checks, and documentation rules (2026-11-17).
+- Runbook: Redis operations (`docs/runbooks/redis-operations.md`) —
+  health checks, key inspection, safe cache clearing, failure table
+  (2026-11-17).
+- Runbook: incident response (`docs/runbooks/incident-response.md`) —
+  severity levels, first-10-minutes procedure, closing criteria
+  (2026-11-17).
+- ADR-006: Redis usage boundaries
+  (`docs/adr/ADR-006-redis-usage-boundaries.md`) — PostgreSQL as the
+  only source of truth, TTL rule, degradation contract (2026-11-17).
 - MIT license file (`LICENSE`) — the README badge link now resolves
   (2026-11-16).
 - Security policy (`SECURITY.md`): vulnerability reporting route and the
