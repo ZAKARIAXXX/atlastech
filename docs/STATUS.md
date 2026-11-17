@@ -11,6 +11,15 @@ Active development. See the Roadmap in README.md for the current phase.
   and database backup & restore (`docs/runbooks/database-backup-restore.md`).
 - Added ADR-005 recording the Docker Compose local-environment decision.
 
+## Documentation (2026-11-17)
+
+- Added `CONTRIBUTING.md`: workflow, branch/commit conventions, and the
+  local checks expected before pushing.
+- Added runbooks for Redis operations (`docs/runbooks/redis-operations.md`)
+  and incident response (`docs/runbooks/incident-response.md`).
+- Added ADR-006 recording the Redis usage boundaries: PostgreSQL is the
+  only source of truth; Redis holds rebuildable, expiring data only.
+
 ## CI (last verified 2026-11-13)
 
 No CI change has been recorded since 2026-11-13; the two failures below
