@@ -7,6 +7,28 @@ Format follows [Keep a Changelog](https://keepachangelog.com/).
 
 ### Added
 
+- Runbook: logging and monitoring
+  (`docs/runbooks/logging-and-monitoring.md`) — per-service log
+  routes, health signals, incident evidence capture (2026-11-19).
+- Runbook: performance troubleshooting
+  (`docs/runbooks/performance-troubleshooting.md`) — outside-in
+  measurement procedure, N+1 and index checks, failure table
+  (2026-11-19).
+- ADR-008: API versioning and error format
+  (`docs/adr/ADR-008-api-versioning-and-error-format.md`) — `/api/v1`
+  major-version prefixes and a single error envelope (2026-11-19).
+- Runbook: PostgreSQL operations (`docs/runbooks/postgres-operations.md`) —
+  health checks, connections, slow queries, maintenance, failure table
+  (2026-11-18).
+- Runbook: API service operations (`docs/runbooks/api-operations.md`) —
+  health checks, restart procedure, log reading, failure table
+  (2026-11-18).
+- Runbook: environment variables and secrets
+  (`docs/runbooks/environment-and-secrets.md`) — fail-fast rule,
+  rotation procedure, committed-secret response (2026-11-18).
+- ADR-007: healthcheck and readiness policy
+  (`docs/adr/ADR-007-healthcheck-and-readiness-policy.md`) — dependents
+  wait for healthy; health reflects dependencies honestly (2026-11-18).
 - Contribution guide (`CONTRIBUTING.md`): workflow, branch/commit
   conventions, local checks, and documentation rules (2026-11-17).
 - Runbook: Redis operations (`docs/runbooks/redis-operations.md`) —
