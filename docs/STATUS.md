@@ -20,6 +20,25 @@ Active development. See the Roadmap in README.md for the current phase.
 - Added ADR-006 recording the Redis usage boundaries: PostgreSQL is the
   only source of truth; Redis holds rebuildable, expiring data only.
 
+## Documentation (2026-11-18)
+
+- Added runbooks for PostgreSQL operations
+  (`docs/runbooks/postgres-operations.md`), API service operations
+  (`docs/runbooks/api-operations.md`), and environment variables and
+  secrets (`docs/runbooks/environment-and-secrets.md`).
+- Added ADR-007 recording the healthcheck and readiness policy:
+  dependents wait for healthy, health reflects dependencies honestly,
+  and services fail fast instead of failing vague.
+
+## Documentation (2026-11-19)
+
+- Added runbooks for logging and monitoring
+  (`docs/runbooks/logging-and-monitoring.md`) and performance
+  troubleshooting (`docs/runbooks/performance-troubleshooting.md`).
+- Added ADR-008 recording the API versioning and error format policy:
+  major-version URL prefixes, backwards-compatible changes only within
+  a major version, and one error envelope for every endpoint.
+
 ## CI (last verified 2026-11-13)
 
 No CI change has been recorded since 2026-11-13; the two failures below
