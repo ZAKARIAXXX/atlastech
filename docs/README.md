@@ -27,11 +27,18 @@ made; runbooks record how to operate and recover the system.
 - [ADR-004 — Trivy security scanning](adr/ADR-004-trivy-security-scanning.md)
 - [ADR-005 — Docker Compose local environment](adr/ADR-005-docker-compose-local-environment.md)
 - [ADR-006 — Redis usage boundaries](adr/ADR-006-redis-usage-boundaries.md)
+- [ADR-007 — Healthcheck and readiness policy](adr/ADR-007-healthcheck-and-readiness-policy.md)
+- [ADR-008 — API versioning and error format](adr/ADR-008-api-versioning-and-error-format.md)
 
 ## Runbooks
 
 - [Local development](runbooks/local-development.md)
 - [Database backup & restore](runbooks/database-backup-restore.md)
+- [PostgreSQL operations](runbooks/postgres-operations.md)
+- [API service operations](runbooks/api-operations.md)
+- [Environment variables and secrets](runbooks/environment-and-secrets.md)
+- [Logging and monitoring](runbooks/logging-and-monitoring.md)
+- [Performance troubleshooting](runbooks/performance-troubleshooting.md)
 - [Redis operations](runbooks/redis-operations.md)
 - [Incident response](runbooks/incident-response.md)
 - [CI](runbooks/CI.md)
