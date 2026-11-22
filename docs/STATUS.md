@@ -2,6 +2,14 @@
 
 Active development. See the Roadmap in README.md for the current phase.
 
+## CI status (2026-11-22)
+
+- CI is currently red on the latest head. The Security Scan job is
+  blocked by the retired `aquasecurity/trivy-action@0.28.0` tag; the
+  fix is a one-line bump to `v0.36.0` in `.github/workflows/ci.yml`
+  (pending). The API Lint & Type Check failure is still under
+  investigation — no fix proposed until the failing log is read.
+
 ## Documentation (2026-11-16)
 
 - Added the MIT `LICENSE` file — the README badge link now resolves.
