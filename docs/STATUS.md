@@ -10,6 +10,14 @@ Active development. See the Roadmap in README.md for the current phase.
   (pending). The API Lint & Type Check failure is still under
   investigation — no fix proposed until the failing log is read.
 
+## CI status (2026-11-23)
+
+- Re-checked on head `c09c1a79`: the run failed on the same two jobs
+  (API Lint & Type Check in 27s, Security Scan in 3s); Shared Schemas
+  and Web Lint passed. Diagnosis unchanged — Security Scan remains
+  blocked by the retired trivy-action tag, and the API Lint cause
+  still requires the failing log’s first lines.
+
 ## Documentation (2026-11-16)
 
 - Added the MIT `LICENSE` file — the README badge link now resolves.
